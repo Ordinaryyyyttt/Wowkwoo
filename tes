@@ -1,0 +1,73 @@
+-- 1. Hooking Nama (God Mode)
+local OLD_NAME = "RullzsyHUB"
+local NEW_NAME = "SirM"
+
+local mt = getrawmetatable(game)
+local oldNewIndex = mt.__newindex
+setreadonly(mt, false)
+
+mt.__newindex = newcclosure(function(t, k, v)
+    if k == "Text" and type(v) == "string" then
+        if v:find(OLD_NAME) or v:find("Duels") then
+            local newVal = v:gsub(OLD_NAME, NEW_NAME)
+            newVal = newVal:gsub("Duels", "(NO SPEED)")
+            return oldNewIndex(t, k, newVal)
+        end
+    end
+    return oldNewIndex(t, k, v)
+end)
+setreadonly(mt, true)
+
+print("SirM-Recorder: Mengeksekusi Hub...")
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Ordinaryyyyttt/Wowkwoo/refs/heads/main/L.lua"))()
+
+-- 2. Bruteforce UI Fixer (Anti-Nyangkut & Auto Center)
+task.spawn(function()
+    -- Tunggu 4 detik biar Hub-nya selesai munculin semua UI & Notifikasinya
+    task.wait(4) 
+    
+    local coreGui = game:GetService("CoreGui")
+    local mainContainer = nil
+    
+    for _, obj in ipairs(coreGui:GetDescendants()) do
+        -- A. EKSEKUSI MATI NOTIFIKASI NYANGKUT
+        if obj:IsA("TextLabel") and obj.Text:match("Notification") then
+            pcall(function()
+                -- Hancurkan Frame pembungkus teks notifikasi tersebut
+                if obj.Parent then 
+                    obj.Parent:Destroy() 
+                    print("SirM-Recorder: Notifikasi nyebelin berhasil dihancurkan!")
+                end
+            end)
+        end
+        
+        -- B. CARI FRAME UTAMA
+        if obj:IsA("TextLabel") and obj.Text:find(NEW_NAME) then
+            local parent = obj.Parent
+            while parent do
+                if parent:IsA("Frame") and parent.Parent and parent.Parent:IsA("ScreenGui") then
+                    mainContainer = parent
+                    break
+                end
+                parent = parent.Parent
+            end
+        end
+    end
+
+    -- C. PERBAIKI POSISI & UKURAN SECARA PAKSA
+    if mainContainer then
+        -- 1. Perkecil lebih jauh (50%) biar bener-bener muat di layar HP
+        local uiScale = mainContainer:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+        uiScale.Scale = 0.5 
+        uiScale.Parent = mainContainer
+        
+        -- 2. PAKSA POSISI KE TENGAH LAYAR
+        -- Ini mengatasi masalah Title Bar yang tembus ke luar layar atas
+        mainContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+        mainContainer.Position = UDim2.new(0.5, 0, 0.5, 0)
+        
+        print("SirM-Recorder: UI berhasil ditarik ke tengah layar!")
+    else
+        warn("SirM-Recorder: Gagal menemukan Main Frame.")
+    end
+end)
